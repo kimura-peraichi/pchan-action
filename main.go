@@ -1,9 +1,11 @@
 package main
 
 import (
+	"image/color"
+	"log"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"image/color"
 )
 
 const (
@@ -15,11 +17,12 @@ const (
 )
 
 type Game struct {
-	playerX      float64
-	playerY      float64
-	playerVelY   float64
-	onGround     bool
-	backgroundX  float64
+	playerX     float64
+	playerY     float64
+	playerVelY  float64
+	onGround    bool
+	backgroundX float64
+	playerImage *ebiten.Image
 }
 
 func (g *Game) Update() error {
@@ -55,12 +58,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// 背景の描画
 	screen.Fill(color.RGBA{R: 135, G: 206, B: 250, A: 255}) // 空の色
 
-	// プレイヤーの描画
-	playerRect := ebiten.NewImage(20, 40)
-	playerRect.Fill(color.RGBA{R: 255, G: 0, B: 0, A: 255})
+	// プレイヤーの描画（スプライト）
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(g.playerX, g.playerY)
-	screen.DrawImage(playerRect, op)
+	screen.DrawImage(g.playerImage, op)
 
 	// デバッグ情報の表示
 	ebitenutil.DebugPrint(screen, "Use Arrow Keys to Move, Space to Jump")
@@ -71,14 +72,23 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
+	// ゲーム構造体を初期化
 	game := &Game{
 		playerX: screenWidth / 2,
 		playerY: screenHeight - 50,
 	}
+
+	// プレイヤー画像の読み込み
+	var err error
+	game.playerImage, _, err = ebitenutil.NewImageFromFile("player.png")
+	if err != nil {
+		log.Fatalf("failed to load player image: %v", err)
+	}
+
+	// ウィンドウ設定
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Side Scrolling Action Game")
+	ebiten.SetWindowTitle("Side Scrolling Action Game with Sprite")
 	if err := ebiten.RunGame(game); err != nil {
 		panic(err)
 	}
 }
-
